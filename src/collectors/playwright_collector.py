@@ -41,12 +41,15 @@ class PlaywrightCollector(BaseCollector):
                 # Phase 0: Collect target profile
                 phase0_data = self.collect_phase0_profile(self.page)
 
+                # Phase 1: Collect recent posts
+                phase1_data = self.collect_phase1_posts(self.page)
+
                 # Save session for next run
                 self.session_manager.save_session(self.context)
 
                 return {
                     "phase0": phase0_data,
-                    "phase1": None,  # Stub
+                    "phase1": phase1_data,
                     "phase2": None,  # Stub
                     "phase3": None   # Stub
                 }
@@ -207,10 +210,187 @@ class PlaywrightCollector(BaseCollector):
 
     # Phase 1-3 stubs (to be implemented in later tasks)
 
-    def collect_phase1_posts(self):
-        """Phase 1: Collect recent posts (STUB)"""
-        logger.info("Phase 1: Posts collection not yet implemented")
-        return None
+    def collect_phase1_posts(self, page):
+        """Phase 1: Collect recent posts"""
+        logger.info("Phase 1: Collecting recent posts")
+
+        try:
+            # Navigate back to profile
+            url = self.build_profile_url(self.target_account)
+            page.goto(url, wait_until="networkidle")
+            self.rate_limiter.wait()
+
+            # Scroll and collect post URLs
+            post_links = self.scroll_and_collect_posts(page, limit=self.max_posts)
+            logger.info(f"Found {len(post_links)} posts to collect")
+
+            # Visit each post and extract data
+            posts = []
+            for idx, post_url in enumerate(post_links, 1):
+                logger.info(f"Extracting post {idx}/{len(post_links)}: {post_url}")
+                post_data = self.extract_post_data(page, post_url)
+                if post_data:
+                    posts.append(post_data)
+                self.rate_limiter.wait()
+
+            # Create metadata
+            metadata = self.create_metadata(
+                source="playwright",
+                phase="phase1_posts",
+                authenticated=self.session_manager.is_authenticated()
+            )
+
+            result = {
+                "metadata": metadata,
+                "posts": posts
+            }
+
+            # Save progress
+            self.save_progress("phase1_posts", result)
+
+            return result
+
+        except Exception as e:
+            logger.error(f"Error in Phase 1: {e}")
+            return None
+
+    def scroll_and_collect_posts(self, page, limit):
+        """Scroll and collect post URLs"""
+        post_urls = set()
+        max_scrolls = 10
+        selector = 'a[href*="/p/"]'
+
+        try:
+            for scroll_num in range(max_scrolls):
+                # Find all post links
+                post_links = page.query_selector_all(selector)
+
+                for link in post_links:
+                    href = link.get_attribute("href")
+                    if href:
+                        # Build full URL if relative
+                        if href.startswith("/"):
+                            href = f"https://www.instagram.com{href}"
+                        post_urls.add(href)
+
+                # Check if we have enough
+                if len(post_urls) >= limit:
+                    break
+
+                # Scroll down
+                page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
+                page.wait_for_timeout(1000)
+
+            # Return limited list
+            return list(post_urls)[:limit]
+
+        except Exception as e:
+            logger.error(f"Error scrolling and collecting posts: {e}")
+            return list(post_urls)[:limit]
+
+    def extract_post_data(self, page, post_url):
+        """Extract data from a single post"""
+        try:
+            page.goto(post_url, wait_until="networkidle")
+            self.rate_limiter.wait()
+
+            post_data = {
+                "post_url": post_url,
+                "caption": None,
+                "mentions": [],
+                "timestamp": None,
+                "commenters": []
+            }
+
+            # Extract caption using multiple selectors
+            caption_selectors = [
+                'h1',
+                '[class*="Caption"]',
+                'span[dir="auto"]',
+                'article div span'
+            ]
+
+            for selector in caption_selectors:
+                try:
+                    caption_element = page.query_selector(selector)
+                    if caption_element:
+                        caption_text = caption_element.text_content()
+                        if caption_text and len(caption_text) > 10:  # Avoid grabbing UI text
+                            post_data["caption"] = caption_text.strip()
+                            break
+                except:
+                    continue
+
+            # Extract mentions from caption
+            if post_data["caption"]:
+                mention_matches = re.findall(r'@([a-zA-Z0-9._]+)', post_data["caption"])
+                post_data["mentions"] = list(set(mention_matches))
+
+            # Extract timestamp
+            try:
+                time_element = page.query_selector('time[datetime]')
+                if time_element:
+                    post_data["timestamp"] = time_element.get_attribute("datetime")
+            except:
+                pass
+
+            # Extract commenters
+            commenters = self.extract_commenters(page)
+            post_data["commenters"] = commenters[:self.max_commenters]
+
+            logger.info(f"Extracted post data: {len(post_data['commenters'])} commenters, {len(post_data['mentions'])} mentions")
+            return post_data
+
+        except Exception as e:
+            logger.error(f"Error extracting post data from {post_url}: {e}")
+            return None
+
+    def extract_commenters(self, page):
+        """Extract commenter usernames"""
+        commenter_counts = {}
+
+        try:
+            # Find username links in comments
+            # Comments typically have links to user profiles
+            comment_links = page.query_selector_all('a[href*="/"][role="link"]')
+
+            for link in comment_links:
+                href = link.get_attribute("href")
+                if href and href.startswith("/") and not "/p/" in href:
+                    # Extract username from href like "/username/"
+                    username = href.strip("/").split("/")[0]
+
+                    # Skip the target account itself
+                    if username == self.target_account:
+                        continue
+
+                    # Skip if empty or looks like a path
+                    if not username or len(username) < 2:
+                        continue
+
+                    # Count appearances
+                    if username not in commenter_counts:
+                        commenter_counts[username] = 0
+                    commenter_counts[username] += 1
+
+            # Convert to list of dicts
+            commenters = [
+                {
+                    "username": username,
+                    "comment_count": count,
+                    "target_replied": False  # Will be enhanced in later tasks
+                }
+                for username, count in commenter_counts.items()
+            ]
+
+            # Sort by comment count (most active first)
+            commenters.sort(key=lambda x: x["comment_count"], reverse=True)
+
+            return commenters
+
+        except Exception as e:
+            logger.error(f"Error extracting commenters: {e}")
+            return []
 
     def collect_phase2_following(self):
         """Phase 2: Collect following list (STUB)"""
