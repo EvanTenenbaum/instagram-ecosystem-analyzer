@@ -3,6 +3,37 @@ from unittest.mock import Mock, patch, MagicMock
 from src.collectors.playwright_collector import PlaywrightCollector
 
 
+def test_playwright_collector_init():
+    """Test PlaywrightCollector initializes correctly"""
+    config = {
+        "target_account": "test_user",
+        "rate_limiting": {
+            "min_delay_seconds": 1.0,
+            "max_delay_seconds": 2.0,
+            "pause_after_n_requests": 10,
+            "pause_duration_seconds": 5,
+            "retry_on_429": True,
+            "max_retries": 1,
+            "backoff_base": 60
+        },
+        "collection": {
+            "max_posts": 20,
+            "max_commenters_per_post": 10
+        },
+        "authentication": {
+            "start_authenticated": False,
+            "prompt_on_wall": True,
+            "session_cookie_file": "data/.session_cookies.json"
+        }
+    }
+
+    collector = PlaywrightCollector(config)
+
+    assert collector.target_account == "test_user"
+    assert collector.rate_limiter is not None
+    assert collector.session_manager is not None
+
+
 def test_build_profile_url():
     """Test that profile URLs are built correctly"""
     config = {
@@ -10,6 +41,10 @@ def test_build_profile_url():
         "rate_limiting": {
             "min_delay_seconds": 1,
             "max_delay_seconds": 2
+        },
+        "collection": {
+            "max_posts": 20,
+            "max_commenters_per_post": 10
         },
         "authentication": {
             "session_cookie_file": "test_session.json"
@@ -28,6 +63,10 @@ def test_extract_profile_data():
         "rate_limiting": {
             "min_delay_seconds": 1,
             "max_delay_seconds": 2
+        },
+        "collection": {
+            "max_posts": 20,
+            "max_commenters_per_post": 10
         },
         "authentication": {
             "session_cookie_file": "test_session.json"

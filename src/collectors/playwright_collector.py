@@ -15,6 +15,8 @@ class PlaywrightCollector(BaseCollector):
         super().__init__(config)
         self.rate_limiter = RateLimiter(config["rate_limiting"])
         self.session_manager = SessionManager(config)
+        self.max_posts = config["collection"]["max_posts"]
+        self.max_commenters = config["collection"]["max_commenters_per_post"]
         self.browser = None
         self.context = None
         self.page = None
@@ -37,7 +39,7 @@ class PlaywrightCollector(BaseCollector):
                 self.session_manager.load_session(self.context)
 
                 # Phase 0: Collect target profile
-                phase0_data = self.collect_phase0_profile()
+                phase0_data = self.collect_phase0_profile(self.page)
 
                 # Save session for next run
                 self.session_manager.save_session(self.context)
@@ -53,23 +55,23 @@ class PlaywrightCollector(BaseCollector):
             if self.browser:
                 self.browser.close()
 
-    def collect_phase0_profile(self):
+    def collect_phase0_profile(self, page):
         """Phase 0: Collect target account profile data"""
         logger.info(f"Phase 0: Collecting profile for {self.target_account}")
 
         url = self.build_profile_url(self.target_account)
 
         try:
-            self.page.goto(url, wait_until="networkidle")
+            page.goto(url, wait_until="networkidle")
             self.rate_limiter.wait()
 
             # Check for login wall
-            if self.session_manager.detect_login_wall(self.page):
+            if self.session_manager.detect_login_wall(page):
                 if not self.session_manager.prompt_for_login():
                     logger.warning("User skipped authentication, data may be limited")
 
             # Extract profile data
-            profile_data = self.extract_profile_data(self.page, self.target_account)
+            profile_data = self.extract_profile_data(page, self.target_account)
 
             # Create metadata
             metadata = self.create_metadata(
@@ -205,17 +207,17 @@ class PlaywrightCollector(BaseCollector):
 
     # Phase 1-3 stubs (to be implemented in later tasks)
 
-    def collect_phase1_followers_following(self):
-        """Phase 1: Collect followers and following lists (STUB)"""
-        logger.info("Phase 1: Followers/Following collection not yet implemented")
+    def collect_phase1_posts(self):
+        """Phase 1: Collect recent posts (STUB)"""
+        logger.info("Phase 1: Posts collection not yet implemented")
         return None
 
-    def collect_phase2_recent_posts(self):
-        """Phase 2: Collect recent posts and engagement (STUB)"""
-        logger.info("Phase 2: Recent posts collection not yet implemented")
+    def collect_phase2_following(self):
+        """Phase 2: Collect following list (STUB)"""
+        logger.info("Phase 2: Following collection not yet implemented")
         return None
 
-    def collect_phase3_commenters(self):
-        """Phase 3: Collect top commenters (STUB)"""
-        logger.info("Phase 3: Commenters collection not yet implemented")
+    def collect_phase3_first_degree(self):
+        """Phase 3: Collect first-degree connections (STUB)"""
+        logger.info("Phase 3: First-degree collection not yet implemented")
         return None
