@@ -44,14 +44,20 @@ class PlaywrightCollector(BaseCollector):
                 # Phase 1: Collect recent posts
                 phase1_data = self.collect_phase1_posts(self.page)
 
+                # Phase 2: Collect following list
+                phase2_data = self.collect_phase2_following(self.page)
+
+                # Phase 3: Collect first-degree profiles
+                phase3_data = self.collect_phase3_first_degree(self.page)
+
                 # Save session for next run
                 self.session_manager.save_session(self.context)
 
                 return {
                     "phase0": phase0_data,
                     "phase1": phase1_data,
-                    "phase2": None,  # Stub
-                    "phase3": None   # Stub
+                    "phase2": phase2_data,
+                    "phase3": phase3_data
                 }
 
         finally:
@@ -392,12 +398,179 @@ class PlaywrightCollector(BaseCollector):
             logger.error(f"Error extracting commenters: {e}")
             return []
 
-    def collect_phase2_following(self):
-        """Phase 2: Collect following list (STUB)"""
-        logger.info("Phase 2: Following collection not yet implemented")
-        return None
+    def collect_phase2_following(self, page):
+        """Phase 2: Collect following list"""
+        logger.info("Phase 2: Collecting following list")
 
-    def collect_phase3_first_degree(self):
-        """Phase 3: Collect first-degree connections (STUB)"""
-        logger.info("Phase 3: First-degree collection not yet implemented")
-        return None
+        try:
+            # Navigate to following URL
+            url = f"https://www.instagram.com/{self.target_account}/following/"
+            page.goto(url, wait_until="networkidle")
+            self.rate_limiter.wait()
+
+            # Check for login wall
+            if self.session_manager.detect_login_wall(page):
+                if not self.session_manager.prompt_for_login():
+                    logger.warning("User skipped authentication, following list unavailable")
+                    return None
+
+            # Scroll and collect usernames
+            following_list = self.scroll_and_collect_usernames(page, list_type="following")
+            logger.info(f"Collected {len(following_list)} following accounts")
+
+            # Create metadata
+            metadata = self.create_metadata(
+                source="playwright",
+                phase="phase2_following",
+                authenticated=self.session_manager.is_authenticated()
+            )
+
+            result = {
+                "metadata": metadata,
+                "following": following_list,
+                "status": "complete" if following_list else "failed"
+            }
+
+            # Save progress
+            self.save_progress("phase2_following", result)
+
+            return result
+
+        except Exception as e:
+            logger.error(f"Error in Phase 2: {e}")
+            return None
+
+    def scroll_and_collect_usernames(self, page, list_type):
+        """Scroll through following modal and collect usernames"""
+        usernames = set()
+        max_scrolls = 20
+        stall_counter = 0
+        previous_count = 0
+
+        try:
+            for scroll_num in range(max_scrolls):
+                # Find all username links in the dialog
+                # Following modal uses role="dialog" container
+                links = page.query_selector_all('[role="dialog"] a[href^="/"]')
+
+                for link in links:
+                    href = link.get_attribute("href")
+                    if href and href.startswith("/") and not "/p/" in href:
+                        # Extract username from href like "/username/"
+                        username = href.strip("/").split("/")[0]
+
+                        # Skip if empty or looks invalid
+                        if username and len(username) >= 2:
+                            usernames.add(username)
+
+                # Check for stall (no new usernames for 3 scrolls)
+                current_count = len(usernames)
+                if current_count == previous_count:
+                    stall_counter += 1
+                    if stall_counter >= 3:
+                        logger.info(f"No new usernames for 3 scrolls, stopping at {current_count}")
+                        break
+                else:
+                    stall_counter = 0
+
+                previous_count = current_count
+
+                # Scroll the dialog
+                page.evaluate("document.querySelector('[role=dialog]')?.scrollBy(0, 500)")
+                page.wait_for_timeout(800)
+
+                logger.debug(f"Scroll {scroll_num + 1}/{max_scrolls}: {current_count} usernames")
+
+            return list(usernames)
+
+        except Exception as e:
+            logger.error(f"Error scrolling and collecting usernames: {e}")
+            return list(usernames)
+
+    def collect_phase3_first_degree(self, page):
+        """Phase 3: Collect first-degree connection profiles"""
+        logger.info("Phase 3: Collecting first-degree profiles")
+
+        try:
+            # Load Phase 1 checkpoint for mentions and commenters
+            phase1_data = self.load_checkpoint("phase1_posts")
+
+            # Load Phase 2 checkpoint for following list
+            phase2_data = self.load_checkpoint("phase2_following")
+
+            # Gather all discovered usernames
+            discovered_usernames = set()
+
+            # From Phase 1 mentions
+            if phase1_data and "posts" in phase1_data:
+                for post in phase1_data["posts"]:
+                    if "mentions" in post:
+                        discovered_usernames.update(post["mentions"])
+
+            # From Phase 1 commenters
+            if phase1_data and "posts" in phase1_data:
+                for post in phase1_data["posts"]:
+                    if "commenters" in post:
+                        for commenter in post["commenters"]:
+                            discovered_usernames.add(commenter["username"])
+
+            # From Phase 2 following list
+            if phase2_data and "following" in phase2_data:
+                discovered_usernames.update(phase2_data["following"])
+
+            logger.info(f"Found {len(discovered_usernames)} unique first-degree accounts")
+
+            # Collect profile for each account
+            discovered_accounts = []
+            for username in discovered_usernames:
+                logger.info(f"Collecting profile for {username}")
+                profile = self.collect_account_profile(page, username)
+                if profile:
+                    discovered_accounts.append(profile)
+                self.rate_limiter.wait()
+
+            # Create metadata
+            metadata = self.create_metadata(
+                source="playwright",
+                phase="phase3_first_degree",
+                authenticated=self.session_manager.is_authenticated()
+            )
+
+            result = {
+                "metadata": metadata,
+                "discovered_accounts": discovered_accounts
+            }
+
+            # Save progress
+            self.save_progress("phase3_first_degree", result)
+
+            return result
+
+        except Exception as e:
+            logger.error(f"Error in Phase 3: {e}")
+            return None
+
+    def collect_account_profile(self, page, username):
+        """Collect profile for a single account"""
+        try:
+            # Navigate to profile
+            url = self.build_profile_url(username)
+            page.goto(url, wait_until="networkidle")
+            self.rate_limiter.wait()
+
+            # Extract profile data (reuse from Phase 0)
+            profile_data = self.extract_profile_data(page, username)
+
+            # Add source metadata
+            profile_data["source"] = "first_degree"
+            profile_data["first_seen"] = self.create_metadata(
+                source="playwright",
+                phase="phase3_first_degree",
+                authenticated=self.session_manager.is_authenticated()
+            )["timestamp"]
+
+            return profile_data
+
+        except Exception as e:
+            logger.error(f"Error collecting profile for {username}: {e}")
+            return None
