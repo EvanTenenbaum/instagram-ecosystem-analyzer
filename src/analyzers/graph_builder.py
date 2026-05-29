@@ -70,13 +70,17 @@ class GraphBuilder:
                 weight = self._get_edge_weight(rel_type, metadata)
                 G.add_edge(source, target, relationship=rel_type, weight=weight, **metadata)
             else:
-                # Edge exists, potentially update or aggregate
+                # Edge exists, aggregate weights and relationship types
                 existing_weight = G[source][target].get('weight', 0)
                 new_weight = self._get_edge_weight(rel_type, metadata)
-                # Take max weight if multiple relationship types exist
-                if new_weight > existing_weight:
-                    G[source][target]['weight'] = new_weight
-                    G[source][target]['relationship'] = rel_type
+                # Add weights together
+                G[source][target]['weight'] = existing_weight + new_weight
+                # Append relationship type to list
+                existing_rel = G[source][target]['relationship']
+                if isinstance(existing_rel, list):
+                    G[source][target]['relationship'].append(rel_type)
+                else:
+                    G[source][target]['relationship'] = [existing_rel, rel_type]
 
         # Add account attributes to nodes
         for username, profile in accounts.items():
@@ -93,7 +97,7 @@ class GraphBuilder:
             return
 
         username = profile.get("username", self.target_account)
-        G.add_node(username)
+        G.add_node(username, degree=0, category="target")
         accounts[username] = profile
         logger.info(f"Added target profile: {username}")
 

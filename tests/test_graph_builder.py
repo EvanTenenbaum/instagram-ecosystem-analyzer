@@ -27,6 +27,7 @@ def test_graph_builder_init():
     assert builder.config == config
     assert builder.target_account == "test_user"
     assert builder.edge_weights == config["analysis"]["edge_weights"]
+    assert builder.edge_weights["follows"] == 10
     assert builder.raw_data_dir == Path("data/raw")
     assert builder.processed_dir == Path("data/processed")
 
