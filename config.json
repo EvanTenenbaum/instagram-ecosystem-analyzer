@@ -1,0 +1,56 @@
+{
+  "target_account": "sarah_myerscough",
+  "rate_limiting": {
+    "min_delay_seconds": 2.0,
+    "max_delay_seconds": 5.0,
+    "pause_after_n_requests": 20,
+    "pause_duration_seconds": 30,
+    "retry_on_429": true,
+    "max_retries": 1,
+    "backoff_base": 60
+  },
+  "collection": {
+    "max_posts": 50,
+    "max_commenters_per_post": 20,
+    "collect_second_degree": true,
+    "second_degree_limit": 50,
+    "second_degree_following_sample": 100
+  },
+  "authentication": {
+    "start_authenticated": false,
+    "prompt_on_wall": true,
+    "session_cookie_file": "data/.session_cookies.json"
+  },
+  "analysis": {
+    "scoring_weights": {
+      "proximity": 0.4,
+      "engagement": 0.3,
+      "bridge": 0.2,
+      "category_fit": 0.1
+    },
+    "edge_weights": {
+      "follows": 10,
+      "replies_to": 9,
+      "tags": 8,
+      "collaborator": 10,
+      "repeated_commenter_base": 7,
+      "frequency_bonus": 2,
+      "mentioned": 6
+    },
+    "category_keywords": {
+      "gallery": ["gallery", "art space", "exhibitions", "representing"],
+      "curator": ["curator", "curating", "curatorial"],
+      "collector": ["collector", "collecting", "collection"],
+      "wood_artist": ["wood", "woodturning", "woodwork", "carving"],
+      "craft_artist": ["craft", "maker", "artisan", "handmade"],
+      "furniture_designer": ["furniture", "design", "designer", "sculptural furniture"],
+      "institution": ["museum", "foundation", "institute", "trust"],
+      "fair": ["fair", "art fair", "design week"],
+      "journalist": ["writer", "journalist", "editor", "publication"]
+    }
+  },
+  "ocr": {
+    "confidence_threshold": 0.5,
+    "username_pattern": "@([a-zA-Z0-9._]+)"
+  }
+}
