@@ -51,16 +51,16 @@ class GraphBuilder:
             metadata = data.get("metadata", {})
             phase = metadata.get("phase", "")
 
-            if phase == "phase0":
+            if phase == "phase0" or phase == "phase0_profile":
                 # Target profile
                 self.process_target_profile(data, G, accounts)
-            elif phase == "phase1":
+            elif phase == "phase1" or phase == "phase1_posts":
                 # Posts (tags, commenters, collaborators)
                 self.process_posts(data, G, accounts, relationships)
-            elif phase == "phase2":
+            elif phase == "phase2" or phase == "phase2_following":
                 # Following list
                 self.process_following(data, G, accounts, relationships)
-            elif phase == "phase3":
+            elif phase == "phase3" or phase == "phase3_first_degree":
                 # First-degree account full profiles
                 self.process_first_degree_accounts(data, G, accounts)
 
