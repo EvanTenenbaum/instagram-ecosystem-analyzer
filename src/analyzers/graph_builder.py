@@ -92,7 +92,7 @@ class GraphBuilder:
 
     def process_target_profile(self, data, G, accounts):
         """Add target profile to graph"""
-        profile = data.get("data", {}).get("profile", {})
+        profile = data.get("profile", {})
         if not profile:
             return
 
@@ -103,7 +103,7 @@ class GraphBuilder:
 
     def process_posts(self, data, G, accounts, relationships):
         """Extract relationships from posts"""
-        posts = data.get("data", {}).get("posts", [])
+        posts = data.get("posts", [])
 
         for post in posts:
             # Process tagged accounts
@@ -155,7 +155,7 @@ class GraphBuilder:
 
     def process_following(self, data, G, accounts, relationships):
         """Process following list"""
-        following = data.get("data", {}).get("following", [])
+        following = data.get("following", [])
 
         for account in following:
             username = account.get("username")
@@ -176,7 +176,7 @@ class GraphBuilder:
 
     def process_first_degree_accounts(self, data, G, accounts):
         """Add full profiles for first-degree accounts"""
-        profiles = data.get("data", {}).get("profiles", [])
+        profiles = data.get("discovered_accounts", [])
 
         for profile in profiles:
             username = profile.get("username")
