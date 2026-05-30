@@ -31,10 +31,11 @@ def main():
     try:
         logger.info("Generating reports")
         reporter = AIReporter(config)
-        recommendations, summary = reporter.run()
+        result = reporter.run()
 
         logger.info("Reports generated!")
-        logger.info(f"Recommendations: {len(recommendations)}")
+        logger.info(f"Recommendations: {len(result['recommendations'])}")
+        logger.info(f"Summary: {result['summary_path']}")
         logger.info("Check outputs/ directory for results")
 
         return 0
