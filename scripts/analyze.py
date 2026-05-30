@@ -34,7 +34,8 @@ def main():
         # Build graph
         logger.info("Building graph from raw data")
         graph_builder = GraphBuilder(config)
-        graph = graph_builder.run()
+        result = graph_builder.run()
+        graph = result['graph']
 
         # Score accounts
         logger.info("Scoring accounts")
