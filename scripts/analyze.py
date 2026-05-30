@@ -45,12 +45,13 @@ def main():
         # Detect communities
         logger.info("Detecting communities")
         detector = CommunityDetector(config)
-        communities, bridges = detector.run(graph)
+        community_result = detector.run(graph)
 
         logger.info("Analysis complete!")
         logger.info(f"Total accounts: {len(graph.nodes)}")
         logger.info(f"Total relationships: {len(graph.edges)}")
-        logger.info(f"Communities found: {len(communities)}")
+        logger.info(f"Communities found: {community_result['stats']['total_communities']}")
+        logger.info(f"Bridge accounts found: {community_result['stats']['total_bridge_accounts']}")
 
         return 0
 
