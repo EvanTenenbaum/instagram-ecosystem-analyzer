@@ -87,7 +87,7 @@ class AccountScorer:
 
     def classify_category(self, account_data):
         """Classify account by bio keywords"""
-        bio = account_data.get("bio", "").lower()
+        bio = (account_data.get("bio") or "").lower()
         if not bio:
             return ("unknown", 0.0)
 
