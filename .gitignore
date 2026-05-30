@@ -56,3 +56,4 @@ data/.session_cookies.json
 # Test data
 tests/fixtures/*.json
 !tests/fixtures/.gitkeep
+!tests/fixtures/sample_instagram_data.json

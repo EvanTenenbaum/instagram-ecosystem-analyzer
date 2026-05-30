@@ -1,0 +1,36 @@
+{
+  "collection_metadata": {
+    "source": "test_fixture",
+    "timestamp": "2026-05-29T10:00:00Z",
+    "target_account": "test_target",
+    "phase": "complete"
+  },
+  "target_profile": {
+    "username": "test_target",
+    "display_name": "Test Target",
+    "bio": "Test gallery representing wood artists",
+    "follower_count": 1000,
+    "following_count": 500
+  },
+  "posts": [
+    {
+      "url": "https://instagram.com/p/test1",
+      "caption": "Beautiful work by @artist1 and @artist2",
+      "tagged_accounts": ["artist1", "artist2"],
+      "commenters": [
+        {"username": "fan1", "comment_count": 3, "target_replied": true},
+        {"username": "collector1", "comment_count": 1, "target_replied": false}
+      ]
+    }
+  ],
+  "following": ["artist1", "curator1", "gallery1"],
+  "discovered_accounts": {
+    "artist1": {
+      "username": "artist1",
+      "display_name": "Artist One",
+      "bio": "Wood sculptor and maker",
+      "follower_count": 5000,
+      "degree": 1
+    }
+  }
+}
