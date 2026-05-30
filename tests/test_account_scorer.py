@@ -108,19 +108,21 @@ def test_calculate_engagement_score():
 
     # Bidirectional edges with weights
     # artist1: target follows (10) + artist1 comments back (7) = 17
+    # Normalized: (17 / 30.0) * 100 = 56.67
     G.add_edge("sarah_myerscough", "artist1", weight=10)
     G.add_edge("artist1", "sarah_myerscough", weight=7)
 
     # artist2: only unidirectional (target follows) = 10
+    # Normalized: (10 / 30.0) * 100 = 33.33
     G.add_edge("sarah_myerscough", "artist2", weight=10)
 
     # Test bidirectional engagement
     score1 = scorer.calculate_engagement_score(G, "artist1")
-    assert score1 == 17
+    assert round(score1, 2) == 56.67
 
     # Test unidirectional engagement
     score2 = scorer.calculate_engagement_score(G, "artist2")
-    assert score2 == 10
+    assert round(score2, 2) == 33.33
 
     # Test account with no edges
     G.add_node("artist3")

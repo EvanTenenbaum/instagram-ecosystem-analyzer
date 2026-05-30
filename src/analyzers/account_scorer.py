@@ -3,6 +3,7 @@ import logging
 from pathlib import Path
 import networkx as nx
 from datetime import datetime
+import pandas as pd
 
 logger = logging.getLogger(__name__)
 
@@ -29,6 +30,17 @@ class AccountScorer:
             path_length = nx.shortest_path_length(G, self.target_account, account)
             # Inverse scoring: 1/hops * 100
             score = (1.0 / path_length) * 100
+
+            # Check if path is reverse (account -> target)
+            try:
+                reverse_path_length = nx.shortest_path_length(G, account, self.target_account)
+                # If reverse path exists and is shorter/equal, apply 80% penalty
+                if reverse_path_length <= path_length:
+                    score = score * 0.8
+            except (nx.NetworkXNoPath, nx.NodeNotFound):
+                # No reverse path, no penalty
+                pass
+
             return score
         except (nx.NetworkXNoPath, nx.NodeNotFound):
             # No path exists or node not in graph
@@ -36,15 +48,20 @@ class AccountScorer:
 
     def calculate_engagement_score(self, G, account):
         """Score based on edge weights (bidirectional)"""
-        score = 0
+        total_weight = 0
 
         # Check edge from target to account
         if G.has_edge(self.target_account, account):
-            score += G[self.target_account][account].get('weight', 0)
+            total_weight += G[self.target_account][account].get('weight', 0)
 
         # Check edge from account to target (bidirectional)
         if G.has_edge(account, self.target_account):
-            score += G[account][self.target_account].get('weight', 0)
+            total_weight += G[account][self.target_account].get('weight', 0)
+
+        # Normalize to 0-100 scale
+        score = (total_weight / 30.0) * 100
+        # Cap at 100
+        score = min(score, 100.0)
 
         return score
 
@@ -72,7 +89,7 @@ class AccountScorer:
         """Classify account by bio keywords"""
         bio = account_data.get("bio", "").lower()
         if not bio:
-            return "unknown"
+            return ("unknown", 0.0)
 
         # Define desirable categories in priority order
         desirable_categories = ["gallery", "curator", "wood_artist", "furniture_designer"]
@@ -85,11 +102,12 @@ class AccountScorer:
                     matched_categories.append(category)
                     break  # Move to next category once we find a match
 
-        # Return first matched category
+        # Calculate confidence based on number of matches
         if matched_categories:
-            return matched_categories[0]
+            confidence = min(len(matched_categories) / len(self.category_keywords), 1.0)
+            return (matched_categories[0], confidence)
 
-        return "unknown"
+        return ("unknown", 0.0)
 
     def score_accounts(self, G):
         """Score all accounts with weighted average"""
@@ -109,7 +127,7 @@ class AccountScorer:
             bridge = self.calculate_bridge_score(G, node)
 
             # Classify category
-            category = self.classify_category(node_data)
+            category, confidence = self.classify_category(node_data)
 
             # Calculate category fit score (100 if desirable, 0 otherwise)
             desirable_categories = ["gallery", "curator", "wood_artist", "furniture_designer"]
@@ -144,7 +162,7 @@ class AccountScorer:
 
     def save_scores(self, scored_accounts, graph_metrics=None):
         """Save to JSON"""
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        timestamp = pd.Timestamp.now().isoformat()
         scores_path = self.processed_dir / f"account_scores_{timestamp}.json"
 
         output_data = {
