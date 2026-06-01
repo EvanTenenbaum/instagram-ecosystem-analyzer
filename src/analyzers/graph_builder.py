@@ -11,13 +11,30 @@ logger = logging.getLogger(__name__)
 class GraphBuilder:
     """Build NetworkX graph from collected Instagram data"""
 
-    def __init__(self, config):
-        """Initialize with config, extract edge_weights, set up directories"""
+    def __init__(self, config, data_dir=None, processed_dir=None):
+        """Initialize with config, extract edge_weights, set up directories.
+
+        Args:
+            config: Configuration dict with target_account and analysis settings.
+            data_dir: Optional override for raw data directory (enables multi-target
+                namespacing, e.g. "data/raw/sarah_myerscough"). Defaults to "data/raw".
+            processed_dir: Optional override for processed output directory. If
+                data_dir is provided but processed_dir is not, the processed dir is
+                derived by replacing "raw" with "processed" in data_dir.
+        """
         self.config = config
         self.target_account = config["target_account"]
         self.edge_weights = config["analysis"]["edge_weights"]
-        self.raw_data_dir = Path("data/raw")
-        self.processed_dir = Path("data/processed")
+        if data_dir is not None:
+            self.raw_data_dir = Path(data_dir)
+            if processed_dir is not None:
+                self.processed_dir = Path(processed_dir)
+            else:
+                # Derive processed path by substituting "raw" → "processed"
+                self.processed_dir = Path(str(data_dir).replace("/raw/", "/processed/", 1))
+        else:
+            self.raw_data_dir = Path("data/raw")
+            self.processed_dir = Path(processed_dir) if processed_dir is not None else Path("data/processed")
         self.processed_dir.mkdir(parents=True, exist_ok=True)
 
     def load_all_raw_data(self):
@@ -154,17 +171,29 @@ class GraphBuilder:
                     ))
 
     def process_following(self, data, G, accounts, relationships):
-        """Process following list"""
+        """Process following list.
+
+        Handles both list[str] (from PlaywrightCollector scroll_and_collect_usernames)
+        and list[dict] formats so the graph builder is resilient to either representation.
+        """
         following = data.get("following", [])
 
         for account in following:
-            username = account.get("username")
+            # Handle str (plain username) or dict (username + profile metadata)
+            if isinstance(account, str):
+                username = account
+                account_data = {"username": username}
+            else:
+                username = account.get("username")
+                account_data = account
+
             if username:
                 if username not in accounts:
-                    accounts[username] = account
+                    accounts[username] = account_data
                 else:
-                    # Update with any additional info
-                    accounts[username].update(account)
+                    # Update with any additional info from dict format only
+                    if not isinstance(account, str):
+                        accounts[username].update(account_data)
 
                 # Add following relationship
                 relationships.append((

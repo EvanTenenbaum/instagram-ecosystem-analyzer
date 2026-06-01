@@ -11,13 +11,20 @@ logger = logging.getLogger(__name__)
 class AccountScorer:
     """Calculate multi-factor scores for Instagram accounts"""
 
-    def __init__(self, config):
-        """Initialize with config, scoring_weights, category_keywords"""
+    def __init__(self, config, processed_dir=None):
+        """Initialize with config, scoring_weights, category_keywords.
+
+        Args:
+            config: Configuration dict.
+            processed_dir: Optional override for the output directory (enables
+                per-target namespacing, e.g. "data/processed/sarah_myerscough").
+                Defaults to "data/processed".
+        """
         self.config = config
         self.target_account = config["target_account"]
         self.scoring_weights = config["analysis"]["scoring_weights"]
         self.category_keywords = config["analysis"]["category_keywords"]
-        self.processed_dir = Path("data/processed")
+        self.processed_dir = Path(processed_dir) if processed_dir is not None else Path("data/processed")
         self.processed_dir.mkdir(parents=True, exist_ok=True)
 
     def calculate_proximity_score(self, G, account):
