@@ -351,8 +351,16 @@ class PlaywrightCollector(BaseCollector):
             logger.error(f"Error extracting post data from {post_url}: {e}")
             return None
 
+    # Instagram system/nav paths that appear as hrefs but are not user accounts
+    INSTAGRAM_SYSTEM_PATHS = frozenset({
+        "accounts", "explore", "legal", "web", "popular", "about", "press",
+        "blog", "jobs", "help", "privacy", "terms", "locations", "language",
+        "api", "p", "r", "tv", "reels", "stories", "direct", "lite",
+        "challenge", "login", "signup", "oauth", "favicon.ico",
+    })
+
     def extract_commenters(self, page):
-        """Extract commenter usernames"""
+        """Extract commenter usernames, filtering Instagram nav/system paths."""
         commenter_counts = {}
 
         try:
@@ -365,6 +373,10 @@ class PlaywrightCollector(BaseCollector):
                 if href and href.startswith("/") and not "/p/" in href:
                     # Extract username from href like "/username/"
                     username = href.strip("/").split("/")[0]
+
+                    # Skip Instagram system/nav paths
+                    if username in self.INSTAGRAM_SYSTEM_PATHS:
+                        continue
 
                     # Skip the target account itself
                     if username == self.target_account:
