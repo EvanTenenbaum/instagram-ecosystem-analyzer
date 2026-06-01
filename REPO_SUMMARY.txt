@@ -1,0 +1,237 @@
+INSTAGRAM ECOSYSTEM ANALYZER - GITHUB REPOSITORY SUMMARY
+========================================================
+
+Repository: https://github.com/EvanTenenbaum/instagram-ecosystem-analyzer
+Purpose: AI-powered network intelligence for contemporary craft/design career development
+Created: June 1, 2026
+
+REPOSITORY STRUCTURE
+--------------------
+
+📁 Root Level
+├── README.md                    # Comprehensive documentation (enhanced)
+├── AI_NAVIGATION.md            # AI agent quick start guide (NEW)
+├── QUICKSTART.md               # 5-minute setup guide (NEW)
+├── ANALYSIS_INDEX.md           # In analyses/ - catalog of all analyses
+├── config.json                 # Configuration (target account, rate limits)
+├── requirements.txt            # Python dependencies
+└── .gitignore                  # Data/outputs excluded from git
+
+📁 src/                         # Core application code
+├── collectors/                 # Data collection modules
+│   ├── base_collector.py
+│   ├── playwright_collector.py # 4-phase browser automation
+│   └── screenshot_collector.py # OCR fallback
+├── analyzers/                  # Graph analysis modules  
+│   ├── graph_builder.py        # NetworkX graph construction
+│   ├── account_scorer.py       # Multi-factor scoring algorithm
+│   └── community_detector.py   # Community detection
+├── reporters/                  # Output generation
+│   └── ai_reporter.py          # AI-consumable reports
+└── utils/                      # Utilities
+    ├── rate_limiter.py
+    ├── data_validator.py
+    └── session_manager.py
+
+📁 scripts/                     # Execution scripts
+├── collect.py                  # Data collection orchestrator
+├── analyze.py                  # Analysis orchestrator  
+├── report.py                   # Report generation
+├── run_all.py                  # Full pipeline
+└── [various test scripts]
+
+📁 analyses/                    # Saved analyses (tracked in git) (NEW)
+├── ANALYSIS_INDEX.md          # Catalog of all analyses
+└── 2026-05-30-sarah-myerscough/
+    ├── executive_summary_strategic_recommendations.md
+    ├── strategic_pathways_analysis.md
+    ├── engagement_plan_30_days.md
+    └── top_100_accounts_enriched.csv
+
+📁 data/                        # Data storage (gitignored)
+├── raw/                        # Collected Instagram data
+├── processed/                  # Analyzed data + auto-generated outputs
+└── manual/                     # Screenshot OCR input
+
+📁 outputs/                     # Additional analysis outputs (gitignored)
+📁 tests/                       # Test suite
+📁 docs/                        # Documentation (placeholder for future)
+
+
+KEY FILES FOR AI NAVIGATION
+----------------------------
+
+FOR QUICK CONTEXT:
+1. AI_NAVIGATION.md              ← START HERE (AI agents)
+   - 60-second context load
+   - Analysis methodology explained
+   - Past analysis quick reference
+   - Common AI agent tasks
+   - Pro tips and pitfalls
+
+2. QUICKSTART.md                 ← START HERE (humans)
+   - 5-minute setup
+   - Example workflow
+   - Key files reference
+
+3. analyses/ANALYSIS_INDEX.md    ← Browse past analyses
+   - Catalog of all completed analyses
+   - Key findings from each
+   - Cross-analysis patterns
+   - Analysis templates
+
+FOR UNDERSTANDING SYSTEM:
+4. README.md                     ← Comprehensive docs
+5. src/analyzers/account_scorer.py ← Scoring algorithm
+6. src/analyzers/graph_builder.py  ← Network construction
+7. config.json                   ← Configuration
+
+
+INCLUDED ANALYSIS (COMPLETE EXAMPLE)
+-------------------------------------
+
+Analysis: Sarah Myerscough Ecosystem (May 30, 2026)
+Location: analyses/2026-05-30-sarah-myerscough/
+
+Files:
+- executive_summary_strategic_recommendations.md (10,000+ words)
+  * Key finding: Bridge node identified (@ingridpilkingtonwright)
+  * Top 25 lists: galleries, collectors, designers, press, platforms
+  * Strategic pathways: 5 routes ranked by probability/timeline
+  * Expected ROI rankings
+  * 12-month roadmap
+
+- strategic_pathways_analysis.md (13,000+ words)
+  * Detailed pathway mapping (5 routes)
+  * Hidden opportunities discovered
+  * Graph analysis (centrality, clustering)
+  * Risk assessment
+  * Timeline-based recommendations
+  * Ecosystem clustering
+
+- engagement_plan_30_days.md (8,000+ words)
+  * Day-by-day tactical guide
+  * Specific comment examples
+  * Message templates
+  * Physical event strategies
+  * Success metrics
+  * Red flags to avoid
+
+- top_100_accounts_enriched.csv
+  * 15 accounts classified with web research
+  * Career leverage scores
+  * Introduction/collector/gallery access ratings
+  * Specific recommended actions per account
+
+Key Findings:
+- Critical bridge: @ingridpilkingtonwright (gallery staff, warm connection possible)
+- Primary target: Sarah Myerscough Gallery (in network)
+- Commission channel: @nicolehollis (AD Top 100 designer)
+- Major fair: @tefaf (TEFAF Maastricht)
+- Platforms: Future Icons Selects, Cluster Crafts
+- Expected timeline: 6-18 months to gallery representation
+
+
+AI-FRIENDLY FEATURES
+--------------------
+
+✅ AI_NAVIGATION.md - Quick context loading optimized for AI agents
+✅ ANALYSIS_INDEX.md - Structured catalog with consistent metadata
+✅ Standardized directory structure (YYYY-MM-DD-target-name)
+✅ CSV outputs for easy parsing
+✅ Markdown for human/AI readability
+✅ Clear file naming conventions
+✅ Comprehensive inline documentation
+✅ Template structures for repeatable analyses
+✅ Cross-analysis pattern tracking
+✅ Success metrics templates
+
+
+USAGE WORKFLOW
+--------------
+
+For AI agents analyzing this repository:
+
+1. Initial Context Load (2 min)
+   - Read AI_NAVIGATION.md
+   - Read analyses/ANALYSIS_INDEX.md
+   - Review latest analysis in analyses/ directory
+
+2. New Analysis (60-90 min)
+   - Update config.json with target account
+   - Run collection: python scripts/collect.py --limit 10
+   - Run analysis: python scripts/analyze.py
+   - Run reporting: python scripts/report.py
+   - Review auto-outputs: data/processed/outputs/
+   - Enrich top 25 accounts with web research
+   - Generate strategic analysis documents
+   - Save to analyses/YYYY-MM-DD-[target]/
+   - Update ANALYSIS_INDEX.md
+
+3. Strategic Planning (30-60 min)
+   - Generate executive summary with top 25 lists
+   - Map 5-7 strategic pathways
+   - Create 30-day tactical engagement plan
+   - Calculate ROI rankings
+   - Identify critical success factors
+
+
+TECHNICAL DETAILS
+-----------------
+
+Language: Python 3.14+
+Dependencies: 8 core libraries (playwright, networkx, pandas, etc.)
+Analysis Time: 30-60 minutes for 50-100 accounts
+Test Coverage: ~75%
+
+Collection Phases:
+- Phase 0: Target profile metadata
+- Phase 1: Post engagement (commenters, likers)
+- Phase 2: Following list (often private)
+- Phase 3: First-degree profiles
+
+Analysis Algorithm:
+- Multi-factor scoring: Proximity (40%) + Engagement (30%) + Bridge (20%) + Category (10%)
+- Community detection: Greedy modularity
+- Graph metrics: Betweenness, degree, closeness, eigenvector centrality
+
+
+ETHICAL BOUNDARIES
+------------------
+
+✅ Collects public engagement data only
+✅ Respects rate limits (2-5s delays)
+✅ User-controlled authentication
+✅ Strategic planning tool
+
+❌ NO automated engagement (likes, follows, comments, DMs)
+❌ NO private data collection
+❌ NO Instagram ToS violations
+❌ NO spam or mass outreach
+
+
+REPOSITORY STATUS
+-----------------
+
+✅ Initial tool implementation complete
+✅ First complete analysis (Sarah Myerscough) included
+✅ AI navigation structure in place
+✅ Documentation comprehensive
+✅ GitHub repository created and pushed
+✅ Optimized for AI agent usage
+✅ Example outputs included
+
+Repository: https://github.com/EvanTenenbaum/instagram-ecosystem-analyzer
+Status: Active, ready for additional analyses
+Next: Run new analyses, track patterns, refine methodology
+
+
+QUICK LINKS
+-----------
+
+GitHub: https://github.com/EvanTenenbaum/instagram-ecosystem-analyzer
+AI Start: AI_NAVIGATION.md
+Human Start: QUICKSTART.md
+Past Analyses: analyses/ANALYSIS_INDEX.md
+Full Docs: README.md
+
