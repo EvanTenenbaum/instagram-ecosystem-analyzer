@@ -86,3 +86,60 @@ class SessionManager:
         except KeyboardInterrupt:
             print("\nSkipping authentication, continuing with limited data...")
             return False
+
+    def auto_login(self, page, username: str, password: str) -> bool:
+        """Automated login using credentials. Returns True on success."""
+        try:
+            logger.info("Attempting automated login...")
+            page.goto("https://www.instagram.com/accounts/login/", wait_until="networkidle", timeout=30000)
+            page.wait_for_timeout(2000)
+
+            # Fill username
+            username_field = page.wait_for_selector('input[name="username"]', timeout=10000)
+            username_field.click()
+            username_field.fill(username)
+            page.wait_for_timeout(800)
+
+            # Fill password
+            password_field = page.wait_for_selector('input[name="password"]', timeout=10000)
+            password_field.click()
+            password_field.fill(password)
+            page.wait_for_timeout(800)
+
+            # Submit
+            page.keyboard.press("Enter")
+            logger.info("Submitted login form, waiting for response...")
+            page.wait_for_timeout(5000)
+
+            # Dismiss "Save your login info?" prompt if present
+            try:
+                not_now = page.query_selector('button:has-text("Not now"), div[role="button"]:has-text("Not now")')
+                if not_now:
+                    not_now.click()
+                    page.wait_for_timeout(2000)
+            except Exception:
+                pass
+
+            # Dismiss "Turn on Notifications?" prompt if present
+            try:
+                not_now2 = page.query_selector('button:has-text("Not Now")')
+                if not_now2:
+                    not_now2.click()
+                    page.wait_for_timeout(2000)
+            except Exception:
+                pass
+
+            # Check if login succeeded by looking for home feed indicators
+            page.wait_for_timeout(3000)
+            content = page.content()
+            if "Log in" in page.title() or "login" in page.url:
+                logger.error("Auto-login failed — still on login page")
+                return False
+
+            self.set_authenticated(True)
+            logger.info("Auto-login successful")
+            return True
+
+        except Exception as e:
+            logger.error(f"Auto-login error: {e}")
+            return False

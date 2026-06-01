@@ -1,9 +1,26 @@
 import logging
+import os
 import re
+from pathlib import Path
 from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeout
 from src.collectors.base_collector import BaseCollector
 from src.utils.rate_limiter import RateLimiter
 from src.utils.session_manager import SessionManager
+
+def _load_env_credentials():
+    """Load Instagram credentials from local .env file (never committed)."""
+    env_path = Path(__file__).parent.parent.parent / ".env"
+    creds = {}
+    if env_path.exists():
+        for line in env_path.read_text().splitlines():
+            line = line.strip()
+            if line and not line.startswith("#") and "=" in line:
+                k, _, v = line.partition("=")
+                creds[k.strip()] = v.strip()
+    return (
+        creds.get("INSTAGRAM_USERNAME") or os.environ.get("INSTAGRAM_USERNAME"),
+        creds.get("INSTAGRAM_PASSWORD") or os.environ.get("INSTAGRAM_PASSWORD"),
+    )
 
 logger = logging.getLogger(__name__)
 
@@ -37,6 +54,13 @@ class PlaywrightCollector(BaseCollector):
 
                 # Load saved session if available
                 self.session_manager.load_session(self.context)
+
+                # Auto-login if credentials are available and not yet authenticated
+                if not self.session_manager.is_authenticated():
+                    ig_user, ig_pass = _load_env_credentials()
+                    if ig_user and ig_pass:
+                        logger.info("Credentials found — attempting auto-login before collection")
+                        self.session_manager.auto_login(self.page, ig_user, ig_pass)
 
                 # Phase 0: Collect target profile
                 phase0_data = self.collect_phase0_profile(self.page)
@@ -76,8 +100,14 @@ class PlaywrightCollector(BaseCollector):
 
             # Check for login wall
             if self.session_manager.detect_login_wall(page):
-                if not self.session_manager.prompt_for_login():
-                    logger.warning("User skipped authentication, data may be limited")
+                if not self.session_manager.is_authenticated():
+                    ig_user, ig_pass = _load_env_credentials()
+                    if ig_user and ig_pass:
+                        self.session_manager.auto_login(page, ig_user, ig_pass)
+                    else:
+                        self.session_manager.prompt_for_login()
+                if not self.session_manager.is_authenticated():
+                    logger.warning("Not authenticated, data may be limited")
 
             # Extract profile data
             profile_data = self.extract_profile_data(page, self.target_account)

@@ -57,3 +57,8 @@ data/.session_cookies.json
 tests/fixtures/*.json
 !tests/fixtures/.gitkeep
 !tests/fixtures/sample_instagram_data.json
+
+# Local credentials (never commit)
+.env
+.env.*
+credentials.json
