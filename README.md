@@ -1,6 +1,17 @@
-# Instagram Ecosystem Mapping Tool
+# Instagram Ecosystem Analyzer
 
-Map Instagram ecosystems to identify galleries, curators, collectors, artists, and bridge nodes for strategic engagement planning.
+**AI-powered network intelligence tool for strategic career development in contemporary craft, collectible design, and gallery ecosystems.**
+
+## 🎯 Purpose
+
+This tool maps Instagram networks around target accounts (galleries, fairs, publications) to identify:
+- Strategic relationship pathways
+- Bridge nodes and key connectors  
+- Collector, curator, and gallery access routes
+- Commission and representation opportunities
+- Hidden high-value contacts
+
+**Not a follower growth tool. Not an engagement hack. A professional intelligence system.**
 
 ## Features
 
@@ -123,13 +134,30 @@ Reporting
 outputs/*.csv, *.json, *.md
 ```
 
-## Compliance
+## 🧠 AI Navigation
 
-- ✅ Public data only
-- ✅ Respectful rate limiting (2-5s delays)
-- ✅ No automated engagement
-- ✅ User-controlled authentication
-- ⚠️ Use responsibly - respect Instagram's Terms of Service
+**For AI agents analyzing this repository:**
+
+1. **Quick Start:** Read `AI_NAVIGATION.md` first - loads essential context
+2. **Past Analyses:** Check `analyses/` directory - historical reports indexed in `ANALYSIS_INDEX.md`
+3. **System Understanding:** `src/analyzers/account_scorer.py` - scoring methodology
+4. **Current Config:** `config.json` - active target and parameters
+
+## ⚠️ Ethics & Compliance
+
+**What this tool does:**
+- ✅ Collects public engagement data (comments, likes on public posts)
+- ✅ Maps public relationships
+- ✅ Provides strategic career intelligence
+- ✅ Respects rate limits (2-5s delays, periodic pauses)
+
+**What this tool does NOT do:**
+- ❌ No automated likes, follows, comments, or DMs
+- ❌ No private data collection
+- ❌ No Instagram ToS violations  
+- ❌ No spam or bulk outreach
+
+**Use responsibly:** This is for strategic planning and authentic relationship building only.
 
 ## Troubleshooting
 
