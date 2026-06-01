@@ -79,20 +79,19 @@ def test_build_graph_with_following():
 
     builder = GraphBuilder(config)
 
-    # Mock raw data with following relationships
+    # Mock raw data with following relationships.
+    # Format matches actual PlaywrightCollector output: top-level keys, following as list[str].
     raw_data = [
         {
             "metadata": {
                 "phase": "phase0",
                 "target_account": "sarah_myerscough"
             },
-            "data": {
-                "profile": {
-                    "username": "sarah_myerscough",
-                    "follower_count": 5000,
-                    "following_count": 300,
-                    "bio": "Gallery owner"
-                }
+            "profile": {
+                "username": "sarah_myerscough",
+                "follower_count": 5000,
+                "following_count": 300,
+                "bio": "Gallery owner"
             }
         },
         {
@@ -100,18 +99,10 @@ def test_build_graph_with_following():
                 "phase": "phase2",
                 "target_account": "sarah_myerscough"
             },
-            "data": {
-                "following": [
-                    {
-                        "username": "artist1",
-                        "full_name": "Artist One"
-                    },
-                    {
-                        "username": "artist2",
-                        "full_name": "Artist Two"
-                    }
-                ]
-            }
+            "following": [
+                "artist1",
+                "artist2"
+            ]
         }
     ]
 
