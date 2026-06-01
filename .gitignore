@@ -62,3 +62,15 @@ tests/fixtures/*.json
 .env
 .env.*
 credentials.json
+
+# Browser profile (contains session cookies and Chrome cache — never commit)
+data/.browser_profile/
+
+# Raw data subdirectories (collected Instagram data — never commit)
+data/raw/*/
+
+# Processed data (generated — never commit)
+data/processed/*/
+
+# Outputs (generated — regenerate from data)
+outputs/
