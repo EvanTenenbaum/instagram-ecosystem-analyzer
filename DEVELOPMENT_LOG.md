@@ -132,3 +132,35 @@
 - After real run: `python3 scripts/analyze_multi.py --targets sarah_myerscough hostlerburrows`
 - Review super_accounts.csv manually — do results make strategic sense?
 - If yes → proceed to Phase 2 (content & hashtag intelligence)
+
+---
+
+## 2026-06-01 — Phase 2 Implementation
+
+**Session type:** Implementation
+**Agent:** OpenCode fast-build (Claude Sonnet)
+**Branch:** feature/phase-2-content-intelligence → merged to master
+
+### What I did
+
+1. Built `src/analyzers/content_pattern_analyzer.py` (954 lines)
+   - Hashtag extraction + frequency counts (case-insensitive)
+   - Engagement proxy: avg commenters on posts using each hashtag
+   - Hashtag clustering: 5 thematic buckets (gallery_collector first, then institutional_fair, interior_design, wood_material, craft_making, unclassified)
+   - 5-7 recommended hashtag sets (10-15 tags each) with name/description/rationale
+   - Posting time analysis by day-of-week and hour-of-day
+   - Content theme extraction (non-hashtag caption keywords, stopword filtered)
+   - Markdown report with honest limitations caveat
+2. Built `scripts/analyze_content.py` CLI
+3. 22 new unit tests; 56/56 total pass
+
+### Decisions
+
+- Cluster order matters: gallery_collector checked first so #contemporarycraft → gallery_collector (not craft_making)
+- Volume tier (high/mid/niche) flagged as "estimated" in output — no Instagram API access to measure actual post counts
+- Hashtag sets use a shared "seen" set to prevent duplicate tags across sets
+
+### Next session goals
+
+- Phase 3: Progressive engagement strategy generator (6-month roadmap)
+- Or: run live collection first to get real data to validate Phases 1 & 2
