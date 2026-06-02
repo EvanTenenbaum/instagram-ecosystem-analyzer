@@ -266,6 +266,10 @@ def main() -> int:
                 if profile:
                     fetched_profiles.append(profile)
                     cache.set(profile)
+                # Save cache incrementally every 5 profiles so partial runs survive timeouts
+                if idx % 5 == 0:
+                    cache.save()
+                    print(f"    [checkpoint] Cache saved ({cache.size()} entries)")
                 collector.rate_limiter.wait()
 
             collector.session_manager.save_session(context)
