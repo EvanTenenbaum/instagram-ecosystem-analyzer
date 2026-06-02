@@ -6,6 +6,9 @@ Examples::
     # Live collection (requires authenticated browser session)
     python scripts/collect_multi.py --targets sarah_myerscough hostlerburrows --limit 3
 
+    # Quick mode: Phase 0+1 only (posts/commenters, no profile enrichment)
+    python scripts/collect_multi.py --targets sarah_myerscough hostlerburrows --quick
+
     # Reuse already-collected data (skips browser)
     python scripts/collect_multi.py --targets sarah_myerscough hostlerburrows --skip-collection
 
@@ -63,6 +66,12 @@ def main() -> int:
         help="Path to config JSON (default: config.json)",
     )
     parser.add_argument(
+        "--quick",
+        action="store_true",
+        help="Phase 0+1 only (posts/commenters). Skip Phase 3 profile enrichment. "
+             "Run enrich.py afterward to selectively fetch high-value profiles.",
+    )
+    parser.add_argument(
         "--verbose",
         "-v",
         action="store_true",
@@ -86,10 +95,16 @@ def main() -> int:
     print(f"Collecting {len(args.targets)} target(s): {', '.join(args.targets)}")
     if args.dry_run:
         print("[dry-run] No browser will be launched.")
+    if args.quick:
+        print(
+            "Quick mode: collecting posts and commenters only (no profile enrichment).\n"
+            "Run 'python3 scripts/enrich.py --targets ...' afterward to enrich top accounts."
+        )
 
     results = collector.collect_all(
         skip_existing=args.skip_collection,
         dry_run=args.dry_run,
+        quick=args.quick,
     )
 
     # Summary
