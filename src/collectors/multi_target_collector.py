@@ -54,12 +54,14 @@ class MultiTargetCollector:
     # Public API
     # ------------------------------------------------------------------
 
-    def collect_all(self, skip_existing: bool = False, dry_run: bool = False) -> dict:
+    def collect_all(self, skip_existing: bool = False, dry_run: bool = False,
+                    quick: bool = False) -> dict:
         """Run collection for every target in sequence.
 
         Args:
             skip_existing: If True, skip targets that already have data files.
             dry_run: If True, create directories but do not launch browser.
+            quick: If True, Phase 0+1 only — skip Phase 2/3 enrichment (~3-5 min/target).
 
         Returns:
             Dict mapping each target username to its status dict.
@@ -81,14 +83,15 @@ class MultiTargetCollector:
                 f"Collecting target {idx + 1}/{len(self.targets)}: {target}"
             )
             results[target] = self.collect_single(
-                target, skip_existing=skip_existing, dry_run=dry_run
+                target, skip_existing=skip_existing, dry_run=dry_run, quick=quick
             )
 
         self._save_manifest(results)
         return results
 
     def collect_single(
-        self, target: str, skip_existing: bool = False, dry_run: bool = False
+        self, target: str, skip_existing: bool = False, dry_run: bool = False,
+        quick: bool = False
     ) -> dict:
         """Collect one target account.
 
@@ -96,9 +99,10 @@ class MultiTargetCollector:
             target: Instagram username to collect.
             skip_existing: Skip if data files already exist for this target.
             dry_run: Create directories but skip browser launch.
+            quick: If True, use collect_quick() (Phase 0+1 only, no Phase 3).
 
         Returns:
-            Status dict with keys: status, target, data_dir, files_written.
+            Status dict with keys: status, target, data_dir, files_written, enrichment_status.
         """
         target_dir = Path("data/raw") / target
         target_dir.mkdir(parents=True, exist_ok=True)
@@ -110,6 +114,7 @@ class MultiTargetCollector:
                 "target": target,
                 "data_dir": str(target_dir),
                 "files_written": 0,
+                "enrichment_status": "none" if quick else "complete",
                 "timestamp": datetime.now().isoformat(),
             }
 
@@ -123,6 +128,7 @@ class MultiTargetCollector:
                 "target": target,
                 "data_dir": str(target_dir),
                 "files_written": len(existing_files),
+                "enrichment_status": "unknown",
                 "timestamp": datetime.now().isoformat(),
             }
 
@@ -144,7 +150,13 @@ class MultiTargetCollector:
                     self_.raw_data_dir.mkdir(parents=True, exist_ok=True)
 
             collector = _NamespacedCollector(target_config, target_dir)
-            collector.collect()
+
+            if quick:
+                collector.collect_quick()
+                enrichment_status = "none"
+            else:
+                collector.collect()
+                enrichment_status = "complete"
 
             files_written = len(list(target_dir.glob("*.json")))
             logger.info(
@@ -155,6 +167,7 @@ class MultiTargetCollector:
                 "target": target,
                 "data_dir": str(target_dir),
                 "files_written": files_written,
+                "enrichment_status": enrichment_status,
                 "timestamp": datetime.now().isoformat(),
             }
 
@@ -165,6 +178,7 @@ class MultiTargetCollector:
                 "target": target,
                 "data_dir": str(target_dir),
                 "files_written": 0,
+                "enrichment_status": "error",
                 "error": str(exc),
                 "timestamp": datetime.now().isoformat(),
             }

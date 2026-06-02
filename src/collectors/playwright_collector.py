@@ -88,6 +88,80 @@ class PlaywrightCollector(BaseCollector):
             if self.browser:
                 self.browser.close()
 
+    def collect_quick(self):
+        """
+        Quick collection: Phase 0 (profile) + Phase 1 (posts/commenters) only.
+        Skips Phase 2 (following) and Phase 3 (first-degree profile enrichment).
+        Use collect() for full collection including Phase 3.
+        Returns dict with phase0 and phase1 data only.
+        """
+        logger.info(f"Starting quick collection (Phase 0+1) for {self.target_account}")
+
+        try:
+            with sync_playwright() as p:
+                self.browser = p.chromium.launch(headless=False)
+                self.context = self.browser.new_context()
+                self.page = self.context.new_page()
+
+                # Load saved session if available
+                self.session_manager.load_session(self.context)
+
+                # Auto-login if credentials are available and not yet authenticated
+                if not self.session_manager.is_authenticated():
+                    ig_user, ig_pass = _load_env_credentials()
+                    if ig_user and ig_pass:
+                        logger.info("Credentials found — attempting auto-login before collection")
+                        self.session_manager.auto_login(self.page, ig_user, ig_pass)
+
+                # Phase 0: Collect target profile
+                phase0_data = self.collect_phase0_profile(self.page)
+
+                # Phase 1: Collect recent posts and commenters
+                phase1_data = self.collect_phase1_posts(self.page)
+
+                # Save session for next run
+                self.session_manager.save_session(self.context)
+
+                return {
+                    "phase0": phase0_data,
+                    "phase1": phase1_data,
+                }
+
+        finally:
+            if self.browser:
+                self.browser.close()
+
+    def collect_phase3_selective(self, page, usernames: list) -> dict:
+        """
+        Selective Phase 3: fetch profiles only for the given usernames.
+        Used by enrich.py to do targeted enrichment after --quick collection.
+        Returns same format as collect_phase3_first_degree.
+        """
+        logger.info(f"Selective Phase 3: fetching {len(usernames)} profiles")
+
+        discovered_accounts = []
+        for username in usernames:
+            logger.info(f"Collecting profile for {username}")
+            profile = self.collect_account_profile(page, username)
+            if profile:
+                discovered_accounts.append(profile)
+            self.rate_limiter.wait()
+
+        metadata = self.create_metadata(
+            source="playwright",
+            phase="phase3_selective",
+            authenticated=self.session_manager.is_authenticated()
+        )
+
+        result = {
+            "metadata": metadata,
+            "discovered_accounts": discovered_accounts,
+        }
+
+        self.save_progress("phase3_enriched", result)
+
+        return result
+
     def collect_phase0_profile(self, page):
         """Phase 0: Collect target account profile data"""
         logger.info(f"Phase 0: Collecting profile for {self.target_account}")

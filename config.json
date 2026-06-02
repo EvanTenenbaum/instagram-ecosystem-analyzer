@@ -1,5 +1,24 @@
 {
   "target_account": "sarah_myerscough",
+  "known_strategic_accounts": [
+    "sarahmyerscoughgallery",
+    "hostlerburrows",
+    "nicolehollis",
+    "tefaf",
+    "houseandgardenuk",
+    "friedmanbenda",
+    "ingridpilkingtonwright",
+    "futureiconsselects",
+    "cluster__crafts",
+    "londoncraftweek",
+    "thenewcraftmaker",
+    "ashandplumb",
+    "grwoodturning",
+    "designmiami",
+    "padesignart",
+    "archdigest"
+  ],
+  "cache_max_age_days": 30,
   "rate_limiting": {
     "min_delay_seconds": 2.0,
     "max_delay_seconds": 5.0,
