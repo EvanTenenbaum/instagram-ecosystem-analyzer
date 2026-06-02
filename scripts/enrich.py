@@ -49,7 +49,8 @@ def _load_account_scores(target: str) -> list[dict]:
         return []
     try:
         with open(score_files[-1]) as f:
-            return json.load(f)
+            data = json.load(f)
+        return data.get("scores", [])
     except Exception as e:
         logger.warning(f"Could not load scores for {target}: {e}")
         return []
@@ -74,7 +75,7 @@ def _build_enrichment_list(targets: list[str], config: dict, cache: AccountCache
         for entry in scores:
             username = entry.get("username") or entry.get("account")
             if username:
-                ranked.append((username, entry.get("total_score", 0)))
+                ranked.append((username, entry.get("overall_score", entry.get("total_score", 0))))
         ranked.sort(key=lambda x: x[1], reverse=True)
         top_usernames = [u for u, _ in ranked[:top_n]]
         top_per_target[target] = top_usernames
