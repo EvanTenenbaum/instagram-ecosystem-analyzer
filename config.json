@@ -71,5 +71,6 @@
   "ocr": {
     "confidence_threshold": 0.5,
     "username_pattern": "@([a-zA-Z0-9._]+)"
-  }
+  },
+  "engagement_tracker_file": "data/engagement_tracker.json"
 }

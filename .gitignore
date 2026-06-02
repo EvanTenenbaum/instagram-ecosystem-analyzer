@@ -82,3 +82,5 @@ data/processed/*/
 
 # Outputs (generated — regenerate from data)
 outputs/
+data/account_cache.json
+data/engagement_tracker.json
