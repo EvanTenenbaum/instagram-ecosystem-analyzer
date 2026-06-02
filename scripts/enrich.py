@@ -20,6 +20,8 @@ Examples::
 
 import argparse
 import copy
+import csv
+import glob as _glob
 import json
 import logging
 import sys
@@ -83,7 +85,21 @@ def _build_enrichment_list(targets: list[str], config: dict, cache: AccountCache
             all_scored[u] += 1
 
     # Super accounts: appear in 2+ target networks
-    super_accounts = {u for u, count in all_scored.items() if count >= 2}
+    # Load super accounts from saved cross-network CSV (most recent run)
+    csv_super: set = set()
+    csv_files = sorted(_glob.glob("outputs/super_accounts_*.csv"))
+    if csv_files:
+        try:
+            with open(csv_files[-1]) as f:
+                for row in csv.DictReader(f):
+                    u = row.get("username", "").strip()
+                    if u:
+                        csv_super.add(u)
+            logger.info(f"Loaded {len(csv_super)} super accounts from {csv_files[-1]}")
+        except Exception as e:
+            logger.warning(f"Could not load super accounts CSV: {e}")
+
+    super_accounts = {u for u, count in all_scored.items() if count >= 2} | csv_super
 
     # Union of all candidates
     candidates = seed_accounts | super_accounts
