@@ -50,8 +50,13 @@ logs/*
 .DS_Store
 Thumbs.db
 
-# Session data
-data/.session_cookies.json
+# Session data and credentials (any cookie/auth file variant)
+data/*cookies*
+data/*session*
+data/*.session
+.env
+.env.*
+credentials.json
 
 # Test data
 tests/fixtures/*.json
@@ -65,9 +70,12 @@ credentials.json
 
 # Browser profile (contains session cookies and Chrome cache — never commit)
 data/.browser_profile/
+data/browser_profile/
+data/*profile*/
 
-# Raw data subdirectories (collected Instagram data — never commit)
-data/raw/*/
+# Raw data (all formats, subdirs and top-level — never commit)
+data/raw/
+!data/raw/.gitkeep
 
 # Processed data (generated — never commit)
 data/processed/*/
